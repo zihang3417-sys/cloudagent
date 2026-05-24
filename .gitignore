@@ -1,0 +1,56 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!*.env.example
+
+# IDE and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs and runtime data
+*.log
+logs/
+*.sqlite
+*.sqlite3
+*.db
+
+# Frontend
+node_modules/
+dist/
+build/
+.vite/
+
+# Model/data artifacts
+data/
+datasets/
+runs/
+outputs/
+checkpoints/
+*.pth
+*.pt
+*.onnx
+*.bin
+
+# Local cache
+.cache/
+tmp/
+temp/
+
+# Local private notes
+AGENTS.md
+docs/resume_claims.md
+*简历*.md
+*学习*.md
