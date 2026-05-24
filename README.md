@@ -48,7 +48,6 @@ cloudagent/
   run_backend.py                  # PyCharm-friendly backend launcher
   run_frontend.py                 # PyCharm-friendly frontend launcher
   check_full_demo.py              # Full demo environment smoke check
-  FULL_DEMO_SETUP.md              # Detailed full-demo setup notes
   infra/docker-compose.yml        # MySQL/Redis/Milvus/Neo4j services
 
   cloud_agent/
@@ -189,4 +188,4 @@ ecs.g8a.xlarge 支持多少块弹性网卡？
 
 - 订单、实例、监控、商品和知识库数据均为本地 mock/demo 数据。
 - 主聊天模型默认使用本地 Ollama；Embedding、RAG、语义缓存和长期记忆依赖 DashScope Key。
-- 本项目当前定位为本地演示和学习项目，不是生产级客服系统。
+- 本项目当前定位为本地演示项目，不是生产级客服系统。
