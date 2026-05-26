@@ -64,10 +64,15 @@ async def _extract_memory_context(user_id: str, session_id: str, query: str) -> 
                 
     return "\n".join(context_parts)
 
-async def stream_chat(query: str, user_id: str, session_id: str):
+async def stream_chat(
+    query: str,
+    user_id: str,
+    session_id: str,
+    auth_mode: str = "demo_default",
+):
     context = RequestContext.create(user_id=user_id, session_id=session_id)
     started_at = perf_counter()
-    log_event("chat.request.started", context=context)
+    log_event("chat.request.started", context=context, auth_mode=auth_mode)
 
     try:
         guard_decision = inspect_input(query, user_id=context.user_id)

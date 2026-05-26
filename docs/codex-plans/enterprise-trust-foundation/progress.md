@@ -46,6 +46,14 @@
 - Added `security_blocks_total` to in-process metrics.
 - Added pytest coverage for guard rules, metrics, and chat-service security blocking.
 
+### Phase 7: Demo Authentication Boundary
+
+- Added demo token resolution for backend-trusted user identity.
+- `/api/chat` now derives `user_id` from `Authorization: Bearer <demo-token>` instead of trusting the request body.
+- Keeps local demos runnable with a safe default user when no token is provided.
+- Logs `auth_mode` on chat request start for observability.
+- Added pytest coverage for token mapping and body-user spoofing protection.
+
 ## Verification Commands
 
 ```powershell
@@ -62,4 +70,5 @@
 - Metrics are in-process only; they reset when the backend process restarts.
 - Error classification is still lightweight and should later be expanded with typed exception classes.
 - Security guard is rule-based and should later be paired with model-based guardrails for broader prompt-injection coverage.
+- Authentication is demo-token based only; production auth/OAuth/JWT verification is still future work.
 - Some CLI/demo scripts still use `print()` intentionally for interactive teaching output.

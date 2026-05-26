@@ -27,6 +27,7 @@ async def test_stream_chat_logs_trace_id_for_cache_hit(monkeypatch, capsys):
         query="测试问题",
         user_id="user_1001",
         session_id="session_a",
+        auth_mode="demo_token",
     ):
         chunks.append(chunk)
 
@@ -41,6 +42,8 @@ async def test_stream_chat_logs_trace_id_for_cache_hit(monkeypatch, capsys):
     assert any(line["event"] == "chat.cache.hit" for line in log_lines)
     assert any(line["event"] == "chat.request.completed" for line in log_lines)
     assert all(line["user_id"] == "user_1001" for line in log_lines)
+    started_events = [line for line in log_lines if line["event"] == "chat.request.started"]
+    assert started_events[-1]["auth_mode"] == "demo_token"
     assert chunks[-1] == 'data: {"done": true}\n\n'
     assert request_metrics.snapshot()["requests_total"] == 1
     assert request_metrics.snapshot()["cache_hits_total"] == 1
