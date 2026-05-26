@@ -17,7 +17,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from router import chat
+from router import chat, health
 from service.chat_service import init_agent_system
 
 @asynccontextmanager
@@ -41,6 +41,7 @@ app.add_middleware(
 
 # 注册路由
 app.include_router(chat.router, prefix="/api")
+app.include_router(health.router, prefix="/api")
 
 if __name__ == "__main__":
     import uvicorn
