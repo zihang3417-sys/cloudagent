@@ -27,7 +27,7 @@ async def init_agent_system():
     if graph is None:
         print("🚀 初始化 Multi-Agent 图编排...")
         graph_manager = AgentGraphManager()
-        graph = graph_manager.build_graph()
+        graph = await graph_manager.build_graph_async()
         
         print("🧠 初始化 Memory 系统...")
         from config import get_settings
@@ -128,6 +128,7 @@ async def stream_chat(
             config = {
                 "configurable": {
                     "user_id": context.user_id,
+                    "thread_id": f"{context.user_id}:{context.session_id}",
                     "trace_id": context.trace_id,
                 }
             }

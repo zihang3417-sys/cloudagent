@@ -14,6 +14,7 @@ from agents.billing_agent import BillingAgentNode
 from agents.promotion_agent import PromotionAgentNode
 from agents.recommendation_agent import RecommendationAgent
 from agents.finops_agent import FinOpsAgentNode
+from core.workflow.checkpointing import build_checkpoint_resources
 
 class AgentGraphManager:
     """
@@ -27,6 +28,15 @@ class AgentGraphManager:
         self.promotion_node = PromotionAgentNode()
         self.recommendation_node = RecommendationAgent()
         self.finops_node = FinOpsAgentNode()
+        self.checkpoint_resources = None
+
+    async def initialize_checkpointing(self) -> None:
+        if self.checkpoint_resources is None:
+            self.checkpoint_resources = await build_checkpoint_resources()
+
+    async def build_graph_async(self) -> StateGraph:
+        await self.initialize_checkpointing()
+        return self.build_graph()
 
     def _route_condition(self, state: AgentState) -> str:
         """根据 Orchestrator 的决策决定走向哪个 Agent 节点。"""
@@ -86,11 +96,16 @@ class AgentGraphManager:
         builder.add_edge("recommendation_agent", END)
         builder.add_edge("finops_agent", END)
 
-        return builder.compile()
+        checkpointer = (
+            self.checkpoint_resources.saver
+            if self.checkpoint_resources is not None
+            else None
+        )
+        return builder.compile(checkpointer=checkpointer)
 
 async def test_graph():
     manager = AgentGraphManager()
-    graph = manager.build_graph()
+    graph = await manager.build_graph_async()
 
     print("🚀 正在启动云平台智能客服系统 (Multi-Agent 编排模式)...")
     print("="*60)
@@ -106,7 +121,8 @@ async def test_graph():
     }
     print(f"👤 用户: {state['messages'][0][1]}")
     
-    result = await graph.ainvoke(state)
+    config = {"configurable": {"user_id": "user_1001", "thread_id": "user_1001:test_session_1"}}
+    result = await graph.ainvoke(state, config=config)
     print(f"🤖 AI: {result['messages'][-1].content}\n")
 
     # 模拟第二轮对话，测试路由
@@ -114,7 +130,7 @@ async def test_graph():
     state["messages"].append(("user", "那帮我查一下我最近买了哪些机器？"))
     
     print(f"👤 用户: {state['messages'][-1][1]}")
-    result = await graph.ainvoke(state)
+    result = await graph.ainvoke(state, config=config)
     print(f"🤖 AI: {result['messages'][-1].content}\n")
 
 if __name__ == "__main__":

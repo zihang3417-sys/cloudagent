@@ -54,6 +54,14 @@
 - Logs `auth_mode` on chat request start for observability.
 - Added pytest coverage for token mapping and body-user spoofing protection.
 
+### Phase 8: LangGraph Checkpoint Persistence
+
+- Added SQLite checkpoint resources using `langgraph-checkpoint-sqlite`.
+- `AgentGraphManager` now compiles LangGraph with a SQLite checkpointer when enabled.
+- Chat and CLI graph calls now pass a stable `thread_id` based on `user_id:session_id`.
+- Supports `LANGGRAPH_CHECKPOINT_ENABLED` and `LANGGRAPH_CHECKPOINT_PATH` environment variables.
+- Added pytest coverage for checkpoint resource creation and graph checkpointer wiring.
+
 ## Verification Commands
 
 ```powershell
@@ -66,9 +74,9 @@
 
 - No real authentication or tenant management yet.
 - No hosted tracing system such as LangFuse or OpenTelemetry yet.
-- No LangGraph checkpoint persistence yet.
 - Metrics are in-process only; they reset when the backend process restarts.
 - Error classification is still lightweight and should later be expanded with typed exception classes.
 - Security guard is rule-based and should later be paired with model-based guardrails for broader prompt-injection coverage.
 - Authentication is demo-token based only; production auth/OAuth/JWT verification is still future work.
+- SQLite checkpoints are local-process persistence; production deployment should move to Postgres or managed checkpointer.
 - Some CLI/demo scripts still use `print()` intentionally for interactive teaching output.

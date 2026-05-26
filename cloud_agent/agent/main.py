@@ -96,7 +96,7 @@ async def run_interactive_mode(
     print(f"  [MEM] Long-term  (Milvus): {'✅ connected' if lt_ok else '❌ not available'}")
     print()
 
-    graph = graph_manager.build_graph()
+    graph = await graph_manager.build_graph_async()
     memory_llm = graph_manager.orchestrator.llm
     
     # 初始化状态
@@ -136,7 +136,13 @@ async def run_interactive_mode(
 
             # 2. 执行图
             print("🤖 Processing...")
-            result = await graph.ainvoke(state)
+            config = {
+                "configurable": {
+                    "user_id": user_id,
+                    "thread_id": f"{user_id}:{session_id}",
+                }
+            }
+            result = await graph.ainvoke(state, config=config)
             
             # 使用结果消息更新状态
             state["messages"] = result["messages"]
@@ -205,7 +211,7 @@ async def main() -> None:
     try:
         if args.query:
             # 为简单起见，单次查询使用相同的流程，但不使用循环
-            graph = graph_manager.build_graph()
+            graph = await graph_manager.build_graph_async()
             mem_context = await _extract_memory_context(memory, user_id, session_id, args.query)
             state: AgentState = {
                 "messages": [("user", args.query)],
@@ -216,7 +222,13 @@ async def main() -> None:
                 "metadata": {}
             }
             print(f"\n👤 User: {args.query}")
-            result = await graph.ainvoke(state)
+            config = {
+                "configurable": {
+                    "user_id": user_id,
+                    "thread_id": f"{user_id}:{session_id}",
+                }
+            }
+            result = await graph.ainvoke(state, config=config)
             print(f"\n🤖 AI: {result['messages'][-1].content}\n")
         else:
             await run_interactive_mode(graph_manager, user_id, session_id, memory)

@@ -134,3 +134,39 @@ async def test_stream_chat_blocks_high_risk_input_before_cache(monkeypatch, caps
     assert snapshot["security_blocks_total"] == 1
     assert blocked_events
     assert blocked_events[-1]["reason"] == "prompt_injection"
+
+
+class NoHitSemanticCache:
+    async def get_cache(self, query, user_id):
+        return None
+
+
+class FakeGraph:
+    def __init__(self):
+        self.captured_config = None
+
+    async def ainvoke(self, state, config=None):
+        self.captured_config = config
+
+        class Message:
+            content = "工作流答案"
+
+        return {"messages": [Message()]}
+
+
+@pytest.mark.asyncio
+async def test_stream_chat_passes_thread_id_for_langgraph_checkpoint(monkeypatch):
+    request_metrics.reset()
+    fake_graph = FakeGraph()
+    monkeypatch.setattr(chat_service, "semantic_cache", NoHitSemanticCache())
+    monkeypatch.setattr(chat_service, "memory", None)
+    monkeypatch.setattr(chat_service, "graph", fake_graph)
+
+    async for _ in chat_service.stream_chat(
+        query="什么是 VPC？",
+        user_id="user_1001",
+        session_id="session_a",
+    ):
+        pass
+
+    assert fake_graph.captured_config["configurable"]["thread_id"] == "user_1001:session_a"
