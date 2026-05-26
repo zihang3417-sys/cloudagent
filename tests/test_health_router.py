@@ -83,6 +83,7 @@ def test_metrics_endpoint_returns_current_process_snapshot():
             "requests_failed_total": 0,
             "cache_hits_total": 1,
             "cache_misses_total": 0,
+            "security_blocks_total": 0,
             "avg_latency_ms": 12.0,
         },
     }

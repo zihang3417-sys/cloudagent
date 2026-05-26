@@ -38,6 +38,14 @@
 - Added `error_code` to structured failure logs for easier operations triage.
 - Added pytest coverage for safe error payloads, failed-request metrics, and failure log classification.
 
+### Phase 6: Lightweight Input Security Guard
+
+- Added rule-based input inspection before cache, memory, or Agent workflow execution.
+- Blocks obvious cross-user access attempts, prompt-injection phrasing, and secret-exfiltration requests.
+- Returns stable SSE `SECURITY_BLOCKED` errors without entering downstream dependencies.
+- Added `security_blocks_total` to in-process metrics.
+- Added pytest coverage for guard rules, metrics, and chat-service security blocking.
+
 ## Verification Commands
 
 ```powershell
@@ -53,4 +61,5 @@
 - No LangGraph checkpoint persistence yet.
 - Metrics are in-process only; they reset when the backend process restarts.
 - Error classification is still lightweight and should later be expanded with typed exception classes.
+- Security guard is rule-based and should later be paired with model-based guardrails for broader prompt-injection coverage.
 - Some CLI/demo scripts still use `print()` intentionally for interactive teaching output.

@@ -23,6 +23,10 @@ class MetricsRecorder:
         with self._lock:
             self._cache_misses_total += 1
 
+    def record_security_block(self) -> None:
+        with self._lock:
+            self._security_blocks_total += 1
+
     def snapshot(self) -> dict[str, int | float]:
         with self._lock:
             avg_latency_ms = 0.0
@@ -33,6 +37,7 @@ class MetricsRecorder:
                 "requests_failed_total": self._requests_failed_total,
                 "cache_hits_total": self._cache_hits_total,
                 "cache_misses_total": self._cache_misses_total,
+                "security_blocks_total": self._security_blocks_total,
                 "avg_latency_ms": avg_latency_ms,
             }
 
@@ -42,6 +47,7 @@ class MetricsRecorder:
             self._requests_failed_total = 0
             self._cache_hits_total = 0
             self._cache_misses_total = 0
+            self._security_blocks_total = 0
             self._total_latency_ms = 0.0
 
 

@@ -15,6 +15,7 @@ from infra.cache import semantic_cache
 from infra.error_response import classify_error
 from infra.metrics import request_metrics
 from infra.request_context import RequestContext
+from infra.security_guard import inspect_input
 from infra.structured_logging import log_event
 
 # Global variables for graph and memory
@@ -69,6 +70,27 @@ async def stream_chat(query: str, user_id: str, session_id: str):
     log_event("chat.request.started", context=context)
 
     try:
+        guard_decision = inspect_input(query, user_id=context.user_id)
+        if not guard_decision["allowed"]:
+            latency_ms = round((perf_counter() - started_at) * 1000)
+            request_metrics.record_security_block()
+            request_metrics.record_request(latency_ms=latency_ms, success=False)
+            log_event(
+                "chat.security.blocked",
+                context=context,
+                reason=guard_decision["reason"],
+                risk_level=guard_decision["risk_level"],
+                latency_ms=latency_ms,
+            )
+            error_payload = {
+                "code": "SECURITY_BLOCKED",
+                "message": "请求包含高风险内容，已被安全策略拦截。",
+                "retryable": False,
+            }
+            yield f"data: {json.dumps({'error': error_payload}, ensure_ascii=False)}\n\n"
+            yield f"data: {json.dumps({'done': True})}\n\n"
+            return
+
         cache_hit = await semantic_cache.get_cache(query, context.user_id)
         if cache_hit:
             request_metrics.record_cache_hit()
