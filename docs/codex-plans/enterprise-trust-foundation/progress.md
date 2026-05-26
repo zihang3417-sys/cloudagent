@@ -18,6 +18,12 @@
 - Registered health routes in the FastAPI app.
 - Added pytest coverage for health route behavior and app registration.
 
+### Phase 3: CI Verification
+
+- Added GitHub Actions workflow for enterprise CI.
+- CI installs Python dependencies, runs pytest, and runs both static and route golden evals.
+- Local verification mirrors the CI commands before commit.
+
 ## Verification Commands
 
 ```powershell
@@ -31,5 +37,4 @@
 - No real authentication or tenant management yet.
 - No hosted tracing system such as LangFuse or OpenTelemetry yet.
 - No LangGraph checkpoint persistence yet.
-- No CI workflow yet.
 - Some CLI/demo scripts still use `print()` intentionally for interactive teaching output.
