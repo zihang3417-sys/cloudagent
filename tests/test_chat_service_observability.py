@@ -52,19 +52,38 @@ class FailingSemanticCache:
 
 
 @pytest.mark.asyncio
-async def test_stream_chat_records_failed_request_metrics(monkeypatch):
+async def test_stream_chat_returns_stable_error_event_and_records_metrics(monkeypatch, capsys):
     request_metrics.reset()
     monkeypatch.setattr(chat_service, "semantic_cache", FailingSemanticCache())
     monkeypatch.setattr(chat_service, "memory", None)
 
-    with pytest.raises(RuntimeError):
-        async for _ in chat_service.stream_chat(
-            query="测试问题",
-            user_id="user_1001",
-            session_id="session_a",
-        ):
-            pass
+    chunks = []
+    async for chunk in chat_service.stream_chat(
+        query="测试问题",
+        user_id="user_1001",
+        session_id="session_a",
+    ):
+        chunks.append(chunk)
 
     snapshot = request_metrics.snapshot()
     assert snapshot["requests_total"] == 1
     assert snapshot["requests_failed_total"] == 1
+    error_payload = json.loads(chunks[0].removeprefix("data: ").strip())
+    done_payload = json.loads(chunks[-1].removeprefix("data: ").strip())
+    assert error_payload == {
+        "error": {
+            "code": "CACHE_ERROR",
+            "message": "系统暂时无法处理请求，请稍后重试。",
+            "retryable": True,
+        }
+    }
+    assert done_payload == {"done": True}
+    output = capsys.readouterr().out
+    log_lines = [
+        json.loads(line)
+        for line in output.splitlines()
+        if line.startswith("{") and "trace_id" in line
+    ]
+    failed_events = [line for line in log_lines if line["event"] == "chat.request.failed"]
+    assert failed_events
+    assert failed_events[-1]["error_code"] == "CACHE_ERROR"

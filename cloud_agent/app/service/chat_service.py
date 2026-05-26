@@ -12,6 +12,7 @@ if AGENT_DIR not in sys.path:
 from core.workflow.graph_manager import AgentGraphManager
 from core.memory.memory_manager import MemoryManager
 from infra.cache import semantic_cache
+from infra.error_response import classify_error
 from infra.metrics import request_metrics
 from infra.request_context import RequestContext
 from infra.structured_logging import log_event
@@ -139,10 +140,13 @@ async def stream_chat(query: str, user_id: str, session_id: str):
     except Exception as exc:
         latency_ms = round((perf_counter() - started_at) * 1000)
         request_metrics.record_request(latency_ms=latency_ms, success=False)
+        error_payload = classify_error(exc)
         log_event(
             "chat.request.failed",
             context=context,
+            error_code=error_payload["code"],
             error=type(exc).__name__,
             latency_ms=latency_ms,
         )
-        raise
+        yield f"data: {json.dumps({'error': error_payload}, ensure_ascii=False)}\n\n"
+        yield f"data: {json.dumps({'done': True})}\n\n"

@@ -31,6 +31,13 @@
 - Wired chat service cache-hit/cache-miss and success/failure paths into metrics.
 - Added pytest coverage for metrics recorder, metrics endpoint, and chat-service metric writes.
 
+### Phase 5: Stable Error Responses
+
+- Added safe error classification for cache, workflow, and unknown failures.
+- Changed chat SSE failure path to return stable `error` and `done` events instead of leaking raw exceptions to the client.
+- Added `error_code` to structured failure logs for easier operations triage.
+- Added pytest coverage for safe error payloads, failed-request metrics, and failure log classification.
+
 ## Verification Commands
 
 ```powershell
@@ -45,4 +52,5 @@
 - No hosted tracing system such as LangFuse or OpenTelemetry yet.
 - No LangGraph checkpoint persistence yet.
 - Metrics are in-process only; they reset when the backend process restarts.
+- Error classification is still lightweight and should later be expanded with typed exception classes.
 - Some CLI/demo scripts still use `print()` intentionally for interactive teaching output.
