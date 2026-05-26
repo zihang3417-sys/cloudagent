@@ -2,6 +2,7 @@ import asyncio
 import json
 import sys
 import os
+from time import perf_counter
 
 # 初始化 Agent 和 Graph
 AGENT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "agent")
@@ -11,6 +12,8 @@ if AGENT_DIR not in sys.path:
 from core.workflow.graph_manager import AgentGraphManager
 from core.memory.memory_manager import MemoryManager
 from infra.cache import semantic_cache
+from infra.request_context import RequestContext
+from infra.structured_logging import log_event
 
 # Global variables for graph and memory
 graph = None
@@ -59,40 +62,80 @@ async def _extract_memory_context(user_id: str, session_id: str, query: str) -> 
     return "\n".join(context_parts)
 
 async def stream_chat(query: str, user_id: str, session_id: str):
-    cache_hit = await semantic_cache.get_cache(query, user_id)
-    if cache_hit:
-        response_text = cache_hit["answer"]
-        print(
-            f"⚡ 语义缓存命中: {cache_hit['level']} distance={cache_hit['distance']:.4f} matched='{cache_hit['matched_question']}'"
+    context = RequestContext.create(user_id=user_id, session_id=session_id)
+    started_at = perf_counter()
+    log_event("chat.request.started", context=context)
+
+    try:
+        cache_hit = await semantic_cache.get_cache(query, context.user_id)
+        if cache_hit:
+            response_text = cache_hit["answer"]
+            log_event(
+                "chat.cache.hit",
+                context=context,
+                cache_level=cache_hit.get("level"),
+                distance=round(float(cache_hit.get("distance", 0.0)), 4),
+                matched_question=cache_hit.get("matched_question"),
+            )
+        else:
+            log_event("chat.cache.miss", context=context)
+            log_event("chat.workflow.started", context=context)
+            workflow_started_at = perf_counter()
+            mem_context = await _extract_memory_context(
+                context.user_id,
+                context.session_id,
+                query,
+            )
+            state = {
+                "messages": [("user", query)],
+                "user_id": context.user_id,
+                "session_id": context.session_id,
+                "memory_context": mem_context,
+                "next_agent": "",
+                "metadata": {"trace_id": context.trace_id},
+            }
+            config = {
+                "configurable": {
+                    "user_id": context.user_id,
+                    "trace_id": context.trace_id,
+                }
+            }
+            result = (
+                await asyncio.to_thread(asyncio.run, graph.ainvoke(state, config=config))
+                if not asyncio.iscoroutinefunction(graph.ainvoke)
+                else await graph.ainvoke(state, config=config)
+            )
+            response_text = result["messages"][-1].content
+            log_event(
+                "chat.workflow.completed",
+                context=context,
+                latency_ms=round((perf_counter() - workflow_started_at) * 1000),
+            )
+
+        if memory and memory.short_term.available:
+            turn = [
+                {"role": "user", "content": query},
+                {"role": "assistant", "content": response_text},
+            ]
+            await memory.save_conversation(context.user_id, context.session_id, turn)
+
+        chunk_size = 5
+        for i in range(0, len(response_text), chunk_size):
+            chunk = response_text[i:i + chunk_size]
+            yield f"data: {json.dumps({'content': chunk})}\n\n"
+            await asyncio.sleep(0.02)
+
+        log_event(
+            "chat.request.completed",
+            context=context,
+            latency_ms=round((perf_counter() - started_at) * 1000),
         )
-    else:
-        print("🏃 进入 Agent 工作流推理...")
-        mem_context = await _extract_memory_context(user_id, session_id, query)
-        state = {
-            "messages": [("user", query)],
-            "user_id": user_id,
-            "session_id": session_id,
-            "memory_context": mem_context,
-            "next_agent": "",
-            "metadata": {}
-        }
-        config = {"configurable": {"user_id": user_id}}
-        result = await asyncio.to_thread(asyncio.run, graph.ainvoke(state, config=config)) if not asyncio.iscoroutinefunction(graph.ainvoke) else await graph.ainvoke(state, config=config)
-        response_text = result["messages"][-1].content
-    
-    # 保存短时记忆
-    if memory and memory.short_term.available:
-        turn = [
-            {"role": "user", "content": query},
-            {"role": "assistant", "content": response_text},
-        ]
-        await memory.save_conversation(user_id, session_id, turn)
-        
-    # 流式返回大模型结果
-    chunk_size = 5
-    for i in range(0, len(response_text), chunk_size):
-        chunk = response_text[i:i+chunk_size]
-        yield f"data: {json.dumps({'content': chunk})}\n\n"
-        await asyncio.sleep(0.02)
-        
-    yield f"data: {json.dumps({'done': True})}\n\n"
+        yield f"data: {json.dumps({'done': True})}\n\n"
+    except Exception as exc:
+        log_event(
+            "chat.request.failed",
+            context=context,
+            error=type(exc).__name__,
+            latency_ms=round((perf_counter() - started_at) * 1000),
+        )
+        raise
