@@ -62,6 +62,13 @@
 - Supports `LANGGRAPH_CHECKPOINT_ENABLED` and `LANGGRAPH_CHECKPOINT_PATH` environment variables.
 - Added pytest coverage for checkpoint resource creation and graph checkpointer wiring.
 
+### Phase 9: Structured Log Redaction
+
+- Added recursive redaction for structured log field values.
+- Redacts common email addresses, mainland China mobile numbers, Bearer tokens, `api_key/token/secret/password` assignments, and `sk-...` style secret values before JSON logs are emitted.
+- Keeps top-level sensitive fields such as `query`, `prompt`, `api_key`, `token`, `password`, and `secret` out of logs entirely.
+- Added pytest coverage for PII and secret redaction in allowed string fields and nested structures.
+
 ## Verification Commands
 
 ```powershell
@@ -79,4 +86,5 @@
 - Security guard is rule-based and should later be paired with model-based guardrails for broader prompt-injection coverage.
 - Authentication is demo-token based only; production auth/OAuth/JWT verification is still future work.
 - SQLite checkpoints are local-process persistence; production deployment should move to Postgres or managed checkpointer.
+- Log redaction is rule-based and should later be paired with centralized audit logging and configurable data-classification policy.
 - Some CLI/demo scripts still use `print()` intentionally for interactive teaching output.
