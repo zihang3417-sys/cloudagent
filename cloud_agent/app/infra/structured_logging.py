@@ -16,6 +16,10 @@ def get_enterprise_logger() -> logging.Logger:
         handler = logging.StreamHandler(sys.stdout)
         handler.setFormatter(logging.Formatter("%(message)s"))
         logger.addHandler(handler)
+    else:
+        for handler in logger.handlers:
+            if isinstance(handler, logging.StreamHandler):
+                handler.stream = sys.stdout
     logger.setLevel(logging.INFO)
     logger.propagate = False
     return logger

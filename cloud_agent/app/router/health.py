@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from infra.metrics import request_metrics
 from service import chat_service
 
 
@@ -24,4 +25,12 @@ async def ready_endpoint() -> dict[str, object]:
     return {
         "status": status,
         "checks": checks,
+    }
+
+
+@router.get("/metrics")
+async def metrics_endpoint() -> dict[str, object]:
+    return {
+        "status": "ok",
+        "metrics": request_metrics.snapshot(),
     }

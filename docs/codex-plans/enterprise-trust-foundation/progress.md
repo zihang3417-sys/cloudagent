@@ -24,6 +24,13 @@
 - CI installs Python dependencies, runs pytest, and runs both static and route golden evals.
 - Local verification mirrors the CI commands before commit.
 
+### Phase 4: Request Metrics
+
+- Added in-process metrics recorder for local operations visibility.
+- Added `/api/metrics` endpoint for request, failure, cache, and average latency counters.
+- Wired chat service cache-hit/cache-miss and success/failure paths into metrics.
+- Added pytest coverage for metrics recorder, metrics endpoint, and chat-service metric writes.
+
 ## Verification Commands
 
 ```powershell
@@ -37,4 +44,5 @@
 - No real authentication or tenant management yet.
 - No hosted tracing system such as LangFuse or OpenTelemetry yet.
 - No LangGraph checkpoint persistence yet.
+- Metrics are in-process only; they reset when the backend process restarts.
 - Some CLI/demo scripts still use `print()` intentionally for interactive teaching output.

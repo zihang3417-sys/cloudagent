@@ -12,6 +12,7 @@ if AGENT_DIR not in sys.path:
 from core.workflow.graph_manager import AgentGraphManager
 from core.memory.memory_manager import MemoryManager
 from infra.cache import semantic_cache
+from infra.metrics import request_metrics
 from infra.request_context import RequestContext
 from infra.structured_logging import log_event
 
@@ -69,6 +70,7 @@ async def stream_chat(query: str, user_id: str, session_id: str):
     try:
         cache_hit = await semantic_cache.get_cache(query, context.user_id)
         if cache_hit:
+            request_metrics.record_cache_hit()
             response_text = cache_hit["answer"]
             log_event(
                 "chat.cache.hit",
@@ -78,6 +80,7 @@ async def stream_chat(query: str, user_id: str, session_id: str):
                 matched_question=cache_hit.get("matched_question"),
             )
         else:
+            request_metrics.record_cache_miss()
             log_event("chat.cache.miss", context=context)
             log_event("chat.workflow.started", context=context)
             workflow_started_at = perf_counter()
@@ -125,17 +128,21 @@ async def stream_chat(query: str, user_id: str, session_id: str):
             yield f"data: {json.dumps({'content': chunk})}\n\n"
             await asyncio.sleep(0.02)
 
+        latency_ms = round((perf_counter() - started_at) * 1000)
+        request_metrics.record_request(latency_ms=latency_ms, success=True)
         log_event(
             "chat.request.completed",
             context=context,
-            latency_ms=round((perf_counter() - started_at) * 1000),
+            latency_ms=latency_ms,
         )
         yield f"data: {json.dumps({'done': True})}\n\n"
     except Exception as exc:
+        latency_ms = round((perf_counter() - started_at) * 1000)
+        request_metrics.record_request(latency_ms=latency_ms, success=False)
         log_event(
             "chat.request.failed",
             context=context,
             error=type(exc).__name__,
-            latency_ms=round((perf_counter() - started_at) * 1000),
+            latency_ms=latency_ms,
         )
         raise

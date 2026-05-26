@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from router import health
+from infra.metrics import request_metrics
 from service import chat_service
 
 
@@ -64,3 +65,24 @@ def test_app_registers_health_routes():
 
     assert "/api/health" in paths
     assert "/api/ready" in paths
+
+
+def test_metrics_endpoint_returns_current_process_snapshot():
+    request_metrics.reset()
+    request_metrics.record_cache_hit()
+    request_metrics.record_request(latency_ms=12, success=True)
+    client = TestClient(create_test_app())
+
+    response = client.get("/api/metrics")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "ok",
+        "metrics": {
+            "requests_total": 1,
+            "requests_failed_total": 0,
+            "cache_hits_total": 1,
+            "cache_misses_total": 0,
+            "avg_latency_ms": 12.0,
+        },
+    }
