@@ -69,6 +69,15 @@
 - Keeps top-level sensitive fields such as `query`, `prompt`, `api_key`, `token`, `password`, and `secret` out of logs entirely.
 - Added pytest coverage for PII and secret redaction in allowed string fields and nested structures.
 
+### Phase 10: Backend Deployment Readiness
+
+- Added `Dockerfile.backend` for a containerized FastAPI backend runtime.
+- Added `.dockerignore` to keep secrets, virtual environments, node modules, caches, logs, and local data out of Docker build context.
+- Added `infra/docker-compose.enterprise.yml` as a backend compose override on top of the existing data-service stack.
+- Added `cloud_agent/agent/.env.container.example` with container service hostnames for Redis, MySQL, Milvus, Neo4j, and host Ollama access.
+- Added `docs/deployment.md` with internal-pilot startup, health-check, shutdown, and current-limit notes.
+- Added pytest coverage for deployment artifacts and required safety defaults.
+
 ## Verification Commands
 
 ```powershell
@@ -87,4 +96,5 @@
 - Authentication is demo-token based only; production auth/OAuth/JWT verification is still future work.
 - SQLite checkpoints are local-process persistence; production deployment should move to Postgres or managed checkpointer.
 - Log redaction is rule-based and should later be paired with centralized audit logging and configurable data-classification policy.
+- Backend Docker deployment is now scaffolded, but a real production release still needs image build verification in CI, secret management, TLS, ingress, and resource limits.
 - Some CLI/demo scripts still use `print()` intentionally for interactive teaching output.

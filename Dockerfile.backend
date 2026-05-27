@@ -1,0 +1,30 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+RUN groupadd --system cloudagent \
+    && useradd --system --gid cloudagent --home-dir /app cloudagent
+
+COPY cloud_agent/agent/requirements.txt /app/cloud_agent/agent/requirements.txt
+
+RUN python -m pip install --upgrade pip \
+    && python -m pip install -r /app/cloud_agent/agent/requirements.txt
+
+COPY run_backend.py /app/run_backend.py
+COPY cloud_agent /app/cloud_agent
+
+RUN mkdir -p /app/data \
+    && chown -R cloudagent:cloudagent /app
+
+USER cloudagent
+
+EXPOSE 5000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/api/health', timeout=3).read()"
+
+CMD ["python", "run_backend.py"]
