@@ -51,7 +51,10 @@ tmp/
 temp/
 
 # Local private notes
+.claude/
 AGENTS.md
+PROJECT_EVALUATION_REPORT.md
+CloudAgent企业导师教案-小白系统版.md
 docs/resume_claims.md
 *简历*.md
 *学习*.md

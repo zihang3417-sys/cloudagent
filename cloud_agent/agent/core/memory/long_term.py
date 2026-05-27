@@ -25,7 +25,7 @@ class LongTermMemory:
 
     用法::
 
-        mem = LongTermMemory(embedding_api_key="sk-...")
+        mem = LongTermMemory(embedding_api_key="replace_with_embedding_api_key")
         await mem.initialize()
 
         await mem.save_preference("user1", "language", "Chinese")

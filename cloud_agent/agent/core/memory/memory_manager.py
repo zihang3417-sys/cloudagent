@@ -44,7 +44,7 @@ class MemoryManager:
 
     示例::
 
-        memory = MemoryManager(embedding_api_key="sk-...")
+        memory = MemoryManager(embedding_api_key="replace_with_embedding_api_key")
         await memory.initialize()
 
         # 每个查询轮次:
