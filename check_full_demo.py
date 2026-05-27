@@ -36,7 +36,38 @@ def configure_runtime() -> None:
 def status(name: str, ok: bool, detail: str = "") -> None:
     flag = "OK" if ok else "FAIL"
     suffix = f" - {detail}" if detail else ""
-    print(f"[{flag}] {name}{suffix}")
+    print(f"[{flag}] {name}{suffix}", flush=True)
+
+
+def init_timeout_seconds_from_env() -> float:
+    value = os.getenv("CHECK_FULL_DEMO_INIT_TIMEOUT_SECONDS", "60")
+    try:
+        timeout = float(value)
+    except ValueError:
+        return 60.0
+    return timeout if timeout > 0 else 60.0
+
+
+def print_missing_python_dependency(exc: ModuleNotFoundError) -> None:
+    missing_name = exc.name or str(exc)
+    expected_python = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
+    print(f"[FAIL] 缺少 Python 依赖：{missing_name}")
+    print(f"当前 Python 解释器：{sys.executable}")
+    print(f"建议在 PyCharm 里选择企业副本解释器：{expected_python}")
+    print("或者在项目根目录执行：")
+    print(r".\.venv\Scripts\python.exe -m pip install -r cloud_agent\agent\requirements.txt")
+
+
+async def initialize_agent_system(chat_service) -> bool:
+    timeout = init_timeout_seconds_from_env()
+    try:
+        await asyncio.wait_for(chat_service.init_agent_system(), timeout=timeout)
+    except asyncio.TimeoutError:
+        status("Agent system initialization", False, f"timeout after {timeout:g}s")
+        print("通常是 Docker 基础服务还没启动，或 MySQL/Redis/Milvus/Neo4j 正在初始化。", flush=True)
+        print("建议先在 PyCharm 运行 run_infra.py，等容器启动后再运行 check_full_demo.py。", flush=True)
+        return False
+    return True
 
 
 def check_ollama() -> bool:
@@ -75,10 +106,16 @@ async def main() -> int:
 
     checks.append(check_ollama())
 
-    import app_main  # noqa: F401
-    import service.chat_service as chat_service
+    try:
+        import app_main  # noqa: F401
+        import service.chat_service as chat_service
+    except ModuleNotFoundError as exc:
+        print_missing_python_dependency(exc)
+        return 1
 
-    await chat_service.init_agent_system()
+    if not await initialize_agent_system(chat_service):
+        return 1
+
     checks.append(chat_service.graph is not None)
     status("LangGraph compiled", chat_service.graph is not None)
     checks.append(chat_service.memory.short_term.available)
@@ -126,5 +163,15 @@ async def main() -> int:
     return 1
 
 
+def run_cli() -> None:
+    exit_code = 1
+    try:
+        exit_code = asyncio.run(main())
+    finally:
+        sys.stdout.flush()
+        sys.stderr.flush()
+    os._exit(exit_code)
+
+
 if __name__ == "__main__":
-    raise SystemExit(asyncio.run(main()))
+    run_cli()
