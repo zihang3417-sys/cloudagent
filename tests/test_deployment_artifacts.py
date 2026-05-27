@@ -74,6 +74,14 @@ def test_container_env_example_uses_container_service_hostnames():
     assert "!cloud_agent/agent/.env.container.example" in gitignore
 
 
+def test_full_demo_env_example_is_publishable_without_real_secret():
+    content = read_text("cloud_agent/agent/.env.full_demo.example")
+    gitignore = read_text(".gitignore")
+
+    assert "DASHSCOPE_API_KEY=replace_with_your_dashscope_api_key" in content
+    assert "!cloud_agent/agent/.env.full_demo.example" in gitignore
+
+
 def test_deployment_doc_contains_copy_build_and_healthcheck_commands():
     content = read_text("docs/deployment.md")
 
