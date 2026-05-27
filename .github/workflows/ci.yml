@@ -34,3 +34,6 @@ jobs:
 
       - name: Run route golden eval
         run: python cloud_agent/evals/run_eval.py --mode route
+
+      - name: Validate enterprise compose config
+        run: docker compose -f infra/docker-compose.yml -f infra/docker-compose.enterprise.yml config --quiet

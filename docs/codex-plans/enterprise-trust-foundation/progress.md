@@ -87,12 +87,19 @@
 - Added container env defaults for `CHAT_RATE_LIMIT`, `CHAT_RATE_LIMIT_WINDOW_SECONDS`, and `CHAT_WORKFLOW_TIMEOUT_SECONDS`.
 - Added pytest coverage for rate-limiter behavior, chat-route limiting, timeout classification, and timeout SSE responses.
 
+### Phase 12: Release Gate
+
+- Added a GitHub Actions release gate that validates the enterprise Docker Compose configuration.
+- The CI pipeline now checks that the backend compose override can merge with the data-service compose stack.
+- Added pytest coverage to prevent the release-gate command from being removed silently.
+
 ## Verification Commands
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests -q
 .\.venv\Scripts\python.exe cloud_agent\evals\run_eval.py --mode static
 .\.venv\Scripts\python.exe cloud_agent\evals\run_eval.py --mode route
+docker compose -f infra\docker-compose.yml -f infra\docker-compose.enterprise.yml config --quiet
 ```
 
 ## Remaining Enterprise Gaps
