@@ -170,3 +170,51 @@ async def test_stream_chat_passes_thread_id_for_langgraph_checkpoint(monkeypatch
         pass
 
     assert fake_graph.captured_config["configurable"]["thread_id"] == "user_1001:session_a"
+
+
+class SlowGraph:
+    async def ainvoke(self, state, config=None):
+        import asyncio
+
+        await asyncio.sleep(0.05)
+        return {"messages": []}
+
+
+@pytest.mark.asyncio
+async def test_stream_chat_returns_stable_timeout_error(monkeypatch, capsys):
+    request_metrics.reset()
+    monkeypatch.setenv("CHAT_WORKFLOW_TIMEOUT_SECONDS", "0.01")
+    monkeypatch.setattr(chat_service, "semantic_cache", NoHitSemanticCache())
+    monkeypatch.setattr(chat_service, "memory", None)
+    monkeypatch.setattr(chat_service, "graph", SlowGraph())
+
+    chunks = []
+    async for chunk in chat_service.stream_chat(
+        query="slow workflow",
+        user_id="user_1001",
+        session_id="session_a",
+    ):
+        chunks.append(chunk)
+
+    error_payload = json.loads(chunks[0].removeprefix("data: ").strip())
+    done_payload = json.loads(chunks[-1].removeprefix("data: ").strip())
+    snapshot = request_metrics.snapshot()
+    output = capsys.readouterr().out
+    log_lines = [
+        json.loads(line)
+        for line in output.splitlines()
+        if line.startswith("{") and "trace_id" in line
+    ]
+    failed_events = [line for line in log_lines if line["event"] == "chat.request.failed"]
+
+    assert error_payload == {
+        "error": {
+            "code": "WORKFLOW_TIMEOUT",
+            "message": "Workflow timed out. Please retry later.",
+            "retryable": True,
+        }
+    }
+    assert done_payload == {"done": True}
+    assert snapshot["requests_total"] == 1
+    assert snapshot["requests_failed_total"] == 1
+    assert failed_events[-1]["error_code"] == "WORKFLOW_TIMEOUT"

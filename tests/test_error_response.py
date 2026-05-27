@@ -29,3 +29,15 @@ def test_classify_unknown_error_uses_safe_generic_message():
         "message": "系统暂时无法处理请求，请稍后重试。",
         "retryable": True,
     }
+
+
+def test_classify_timeout_error_uses_workflow_timeout_code():
+    import asyncio
+
+    error = classify_error(asyncio.TimeoutError())
+
+    assert error == {
+        "code": "WORKFLOW_TIMEOUT",
+        "message": "Workflow timed out. Please retry later.",
+        "retryable": True,
+    }

@@ -68,6 +68,9 @@ def test_container_env_example_uses_container_service_hostnames():
     assert "NEO4J_URI=bolt://neo4j:7687" in content
     assert "MILVUS_HOST=milvus" in content
     assert "LANGGRAPH_CHECKPOINT_PATH=/app/data/langgraph_checkpoints.sqlite" in content
+    assert "CHAT_RATE_LIMIT=60" in content
+    assert "CHAT_RATE_LIMIT_WINDOW_SECONDS=60" in content
+    assert "CHAT_WORKFLOW_TIMEOUT_SECONDS=45" in content
     assert "!cloud_agent/agent/.env.container.example" in gitignore
 
 

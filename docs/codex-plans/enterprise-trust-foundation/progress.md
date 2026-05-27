@@ -78,6 +78,15 @@
 - Added `docs/deployment.md` with internal-pilot startup, health-check, shutdown, and current-limit notes.
 - Added pytest coverage for deployment artifacts and required safety defaults.
 
+### Phase 11: Runtime Guardrails
+
+- Added an in-process per-user chat rate limiter for local and small internal pilots.
+- `/api/chat` now returns a stable `429` JSON error with `Retry-After` when a user exceeds the configured request window.
+- Added a configurable LangGraph workflow timeout using `CHAT_WORKFLOW_TIMEOUT_SECONDS`.
+- Timeout failures now return stable SSE `WORKFLOW_TIMEOUT` errors and failed-request metrics instead of hanging indefinitely.
+- Added container env defaults for `CHAT_RATE_LIMIT`, `CHAT_RATE_LIMIT_WINDOW_SECONDS`, and `CHAT_WORKFLOW_TIMEOUT_SECONDS`.
+- Added pytest coverage for rate-limiter behavior, chat-route limiting, timeout classification, and timeout SSE responses.
+
 ## Verification Commands
 
 ```powershell
@@ -97,4 +106,5 @@
 - SQLite checkpoints are local-process persistence; production deployment should move to Postgres or managed checkpointer.
 - Log redaction is rule-based and should later be paired with centralized audit logging and configurable data-classification policy.
 - Backend Docker deployment is now scaffolded, but a real production release still needs image build verification in CI, secret management, TLS, ingress, and resource limits.
+- Rate limiting is in-process only; multi-replica deployment should move the counters to Redis or an API gateway.
 - Some CLI/demo scripts still use `print()` intentionally for interactive teaching output.

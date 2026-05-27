@@ -35,6 +35,18 @@ The compose file loads `.env.container.example` first so the stack can be
 validated with `docker compose config`. Your local `.env.container` is loaded
 after it and overrides the placeholder values.
 
+For small internal pilots, the backend starts with conservative runtime
+protection defaults:
+
+```text
+CHAT_RATE_LIMIT=60
+CHAT_RATE_LIMIT_WINDOW_SECONDS=60
+CHAT_WORKFLOW_TIMEOUT_SECONDS=45
+```
+
+This means each demo user can send 60 chat requests per 60 seconds, and a
+single Agent workflow is cut off after 45 seconds.
+
 ## Start Stack
 
 ```powershell

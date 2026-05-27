@@ -22,6 +22,29 @@ from infra.structured_logging import log_event
 graph = None
 memory = None
 
+
+def workflow_timeout_seconds_from_env() -> float | None:
+    value = os.getenv("CHAT_WORKFLOW_TIMEOUT_SECONDS", "45")
+    try:
+        timeout = float(value)
+    except ValueError:
+        return 45.0
+    return timeout if timeout > 0 else None
+
+
+async def _invoke_graph_with_timeout(state, config):
+    async def invoke_graph():
+        return (
+            await asyncio.to_thread(asyncio.run, graph.ainvoke(state, config=config))
+            if not asyncio.iscoroutinefunction(graph.ainvoke)
+            else await graph.ainvoke(state, config=config)
+        )
+
+    return await asyncio.wait_for(
+        invoke_graph(),
+        timeout=workflow_timeout_seconds_from_env(),
+    )
+
 async def init_agent_system():
     global graph, memory
     if graph is None:
@@ -132,11 +155,7 @@ async def stream_chat(
                     "trace_id": context.trace_id,
                 }
             }
-            result = (
-                await asyncio.to_thread(asyncio.run, graph.ainvoke(state, config=config))
-                if not asyncio.iscoroutinefunction(graph.ainvoke)
-                else await graph.ainvoke(state, config=config)
-            )
+            result = await _invoke_graph_with_timeout(state, config)
             response_text = result["messages"][-1].content
             log_event(
                 "chat.workflow.completed",
