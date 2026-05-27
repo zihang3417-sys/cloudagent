@@ -1,69 +1,64 @@
-# CloudAgent Enterprise Customer Introduction
+# CloudAgent Enterprise 客户介绍与快速启动
 
-## Customer-Friendly Summary
+## 给客户的一句话介绍
 
-CloudAgent Enterprise is an internal AI assistant MVP for cloud-service teams.
-It helps users ask natural-language questions about orders, cloud instances,
-product knowledge, cost optimization, and promotion materials.
+CloudAgent Enterprise 是一个面向云平台客服/运维场景的内部 AI 助手 MVP。它可以帮助用户用自然语言查询订单、云服务器实例、产品知识、成本优化建议和推广物料。
 
-Instead of being a simple chatbot, it combines:
+它不是一个简单聊天机器人，而是一个完整的 AI 应用原型，包含：
 
-- A web chat interface.
-- A FastAPI streaming backend.
-- LangGraph multi-agent orchestration.
-- Specialist agents for billing, product Q&A, recommendation, promotion, and
-  FinOps.
-- Business tools for querying demo orders, instances, monitoring data, products,
-  and promotion materials.
-- Milvus RAG for document knowledge.
-- Neo4j GraphRAG for structured product/spec relationships.
-- Redis and Milvus memory/cache components.
-- Observability, security, eval, and deployment-readiness scaffolding.
+- Web 聊天界面。
+- FastAPI 流式后端。
+- LangGraph 多 Agent 编排。
+- Billing、Product、Recommendation、Promotion、FinOps 等专家 Agent。
+- 订单、实例、监控、商品、推广物料等业务工具。
+- Milvus 文档 RAG。
+- Neo4j GraphRAG。
+- Redis/Milvus 记忆与缓存。
+- 日志、指标、健康检查、CI、限流、超时、安全拦截等工程化骨架。
 
-## What A Customer Can Do
+## 客户能用它做什么
 
-A user can ask:
+用户可以问：
 
 ```text
-Help me check my recent orders.
-Show my running cloud instances.
-What is VPC?
-My server utilization is low. How can I reduce cost?
-I run Java API service + MySQL. Is 2C4G enough?
-How many elastic network interfaces does ecs.g8a.xlarge support?
+帮我查一下最近的订单。
+帮我看看我名下运行中的云服务器实例。
+什么是 VPC？
+服务器利用率低，怎么节省成本？
+我是 Java 接口服务 + MySQL，2 核 4G 够吗？
+ecs.g8a.xlarge 支持多少块弹性网卡？
 ```
 
-The system routes each question to the proper specialist agent, calls tools or
-knowledge bases when needed, and streams the answer back to the browser.
+系统会根据问题类型路由到对应专家 Agent，必要时调用业务工具、RAG 或 GraphRAG，然后把答案流式返回到浏览器。
 
-## Simple Mental Model
+## 最简单的理解方式
 
 ```text
-User question
--> Web chat
+用户问题
+-> Web 聊天界面
 -> FastAPI /api/chat
--> demo auth boundary
--> rate limiter
--> input security guard
--> semantic cache
--> memory context
--> LangGraph orchestrator
--> specialist agent
--> business tool / RAG / GraphRAG
--> streaming answer
--> metrics and structured logs
+-> demo 鉴权边界
+-> 请求限流
+-> 输入安全检查
+-> 语义缓存
+-> 记忆上下文
+-> LangGraph 总调度
+-> 专家 Agent
+-> 业务工具 / RAG / GraphRAG
+-> 流式答案
+-> 指标和结构化日志
 ```
 
-## Current Startup Options
+## 当前启动方式
 
-### Option A: Learning-Friendly Local Demo
+### 方式 A：本地学习/演示版
 
-Use this for PyCharm/local learning.
+适合你自己学习、PyCharm 调试和本地完整演示。
 
 ```powershell
 cd F:\agent0520\cloudagent_enterprise
 Copy-Item cloud_agent\agent\.env.full_demo.example cloud_agent\agent\.env
-# Fill DASHSCOPE_API_KEY in cloud_agent\agent\.env
+# 在 cloud_agent\agent\.env 中填写 DASHSCOPE_API_KEY
 
 cd infra
 docker compose up -d
@@ -78,7 +73,7 @@ npm install
 cd ..\..\..
 ```
 
-Initialize demo data:
+初始化演示数据：
 
 ```powershell
 docker exec -i cloudagent-mysql mysql -uroot -pRootPass123! cloud_platform < cloud_agent\agent\database\init_mock_data.sql
@@ -87,63 +82,62 @@ docker exec -i cloudagent-mysql mysql -uroot -pRootPass123! cloud_platform < clo
 .\.venv\Scripts\python.exe cloud_agent\agent\test\import_kg_jsons.py --clear
 ```
 
-Check the environment:
+自检：
 
 ```powershell
 .\.venv\Scripts\python.exe check_full_demo.py
 ```
 
-Start backend:
+启动后端：
 
 ```powershell
 .\.venv\Scripts\python.exe run_backend.py
 ```
 
-Start frontend:
+启动前端：
 
 ```powershell
 .\.venv\Scripts\python.exe run_frontend.py
 ```
 
-### Option B: Enterprise Backend Container Profile
+### 方式 B：企业后端容器版
 
-Use this to validate the backend deployment skeleton.
+适合验证后端部署骨架。
 
 ```powershell
 cd F:\agent0520\cloudagent_enterprise
 Copy-Item cloud_agent\agent\.env.container.example cloud_agent\agent\.env.container
-# Fill DASHSCOPE_API_KEY in cloud_agent\agent\.env.container
+# 在 cloud_agent\agent\.env.container 中填写 DASHSCOPE_API_KEY
 
 docker compose -f infra\docker-compose.yml -f infra\docker-compose.enterprise.yml up -d --build
 ```
 
-Health checks:
+健康检查：
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:5000/api/health
 Invoke-RestMethod http://127.0.0.1:5000/api/ready
 ```
 
-## Recommended One-Click Experience
+## 推荐的一键启动体验
 
-The project already has:
-
-- `check_full_demo.py`
-- `run_backend.py`
-- `run_frontend.py`
-
-For GitHub polish, add three PowerShell wrappers next:
+当前项目已经有：
 
 ```text
-scripts/setup_demo.ps1        -> install dependencies and copy env example
-scripts/init_demo_data.ps1    -> import MySQL, Milvus, cache, and Neo4j demo data
-scripts/start_demo.ps1        -> start Docker services, backend, and frontend
+check_full_demo.py
+run_backend.py
+run_frontend.py
 ```
 
-This keeps the Python scripts PyCharm-friendly while giving GitHub visitors a
-single command path.
+为了让 GitHub 访客和客户更容易试用，下一步建议补 3 个 PowerShell 包装脚本：
 
-Recommended README quick start:
+```text
+scripts/setup_demo.ps1        -> 安装依赖、复制 env 示例文件
+scripts/init_demo_data.ps1    -> 导入 MySQL、Milvus、语义缓存、Neo4j 演示数据
+scripts/start_demo.ps1        -> 启动 Docker 基础服务、后端和前端
+```
+
+这样 README 可以写成：
 
 ```powershell
 .\scripts\setup_demo.ps1
@@ -151,19 +145,21 @@ Recommended README quick start:
 .\scripts\start_demo.ps1
 ```
 
-## Honest Customer Boundary
+Python 脚本继续保留，方便 PyCharm 调试；PowerShell 脚本负责给客户和 GitHub 访客一个更顺手的一键路径。
 
-This is suitable for:
+## 诚实边界
 
-- Internal pilot.
-- Resume demo.
-- Small-team AI assistant prototype.
-- Local reproducible demo.
+适合说：
 
-It is not yet:
+- 小公司内部试点。
+- 简历展示项目。
+- 小团队 AI 助手原型。
+- 本地可复现实验/演示环境。
 
-- Public SaaS production.
-- Real OAuth/JWT multi-tenant system.
-- Distributed observability platform.
-- Distributed rate-limited deployment.
-- Production secret-management solution.
+暂时不要说：
+
+- 公网 SaaS 生产系统。
+- 真实 OAuth/JWT 多租户系统。
+- 分布式可观测平台。
+- 分布式限流部署。
+- 生产级密钥管理方案。

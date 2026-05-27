@@ -1,99 +1,67 @@
-# CloudAgent Enterprise Handoff
+# CloudAgent Enterprise 项目交付说明
 
-## Positioning
+## 项目定位
 
-CloudAgent Enterprise is best positioned as an internal pilot or MVP for a
-small-company AI assistant. It is not a public SaaS production platform and it
-should not be described as a Claude-level general AI system.
+CloudAgent Enterprise 最适合定位为“小公司内部 AI 助手试点”或“企业级 AI Agent MVP”。它不是公网 SaaS 生产平台，也不应该描述成 Claude 级通用大模型系统。
 
-The strongest story is application engineering: connecting an LLM-based
-multi-agent workflow to business tools, RAG, memory, cache, observability,
-security checks, deployment scaffolding, and verification.
+这个项目最强的价值是 AI 应用工程能力：把大模型、多 Agent 工作流、业务工具、RAG、记忆、缓存、可观测性、安全检查、部署骨架和验证体系串成一条完整链路。
 
-## Confirmed Implemented Behavior
+## 已确认实现的能力
 
-- FastAPI backend and Vue3 frontend demo path.
-- LangGraph-based multi-agent workflow with specialist agents.
-- MCP-style cloud business tools for demo billing, product, promotion,
-  recommendation, and FinOps scenarios.
-- RAG and GraphRAG integration through Milvus and Neo4j demo data.
-- Redis-backed short-term memory path and semantic cache integration.
-- Request-level trace context and structured JSON logging.
-- Health, readiness, and in-process metrics endpoints.
-- Stable SSE error responses for cache, workflow, timeout, security, and
-  internal failures.
-- Rule-based input security guard for obvious prompt injection, secret
-  exfiltration, and cross-user access attempts.
-- Demo-token based auth boundary for `/api/chat`.
-- SQLite checkpoint persistence for local LangGraph sessions.
-- Recursive structured-log redaction for common PII and secret patterns.
-- Backend Dockerfile, enterprise compose override, container env example, and
-  compose-config release gate.
-- In-process rate limiting and workflow timeout protection for internal pilot
-  usage.
-- Boundary note: in-process rate limiting is suitable for one backend process,
-  not for distributed multi-replica production traffic.
+- FastAPI 后端和 Vue3 前端演示链路。
+- 基于 LangGraph 的多 Agent 工作流，包含多个专家 Agent。
+- MCP-style 云平台业务工具，覆盖账单、产品、推广、推荐、FinOps 等演示场景。
+- 通过 Milvus 和 Neo4j 接入 RAG 与 GraphRAG 演示数据。
+- Redis 短期记忆、Milvus 长期记忆和语义缓存链路。
+- 请求级 trace_id 和结构化 JSON 日志。
+- 健康检查、就绪检查和进程内指标接口。
+- 面向缓存、工作流、超时、安全和内部异常的稳定 SSE 错误响应。
+- 规则版输入安全检查，拦截明显 Prompt Injection、Secret Exfiltration 和跨用户访问尝试。
+- `/api/chat` 的 demo-token based 鉴权边界。
+- 基于 SQLite checkpoint 的本地 LangGraph 会话持久化。
+- 结构化日志中的常见 PII 和 secret 模式脱敏。
+- 后端 Dockerfile、企业版 Docker Compose override、容器环境样例和 Compose 配置发布门禁。
+- 面向内部试点的进程内请求限流和工作流超时保护。
+- 边界说明：in-process rate limiting 只适合单后端进程，不适合多副本分布式生产流量。
 
-## Resume-Safe Bullets
+## 简历安全写法
 
-- Built a FastAPI + Vue3 cloud-service assistant with LangGraph multi-agent
-  orchestration, streaming responses, tool calling, memory, RAG, and semantic
-  cache.
-- Added enterprise-oriented trust foundations including trace IDs, structured
-  JSON logs, health/readiness checks, request metrics, stable error contracts,
-  and golden eval regression checks.
-- Implemented safety boundaries for demo usage, including backend-trusted user
-  identity, cross-user access blocking, prompt-injection pattern blocking, and
-  structured-log PII redaction.
-- Added local persistence and deployment readiness through SQLite checkpointing,
-  Docker backend scaffolding, compose configuration validation, and CI
-  verification.
-- Improved runtime resilience with per-user rate limiting and configurable
-  workflow timeout handling.
+- 构建 FastAPI + Vue3 云平台智能助手，基于 LangGraph 实现多 Agent 编排，支持流式响应、工具调用、记忆、RAG 和语义缓存。
+- 补齐企业级可信基础设施，包括 trace_id、结构化 JSON 日志、健康/就绪检查、请求指标、稳定错误契约和 golden eval 回归检查。
+- 实现演示环境下的安全边界，包括后端可信用户身份、跨用户访问拦截、Prompt Injection 规则拦截和结构化日志 PII 脱敏。
+- 通过 SQLite checkpoint、后端 Dockerfile、Compose 配置校验和 GitHub Actions CI，增强本地持久化、部署就绪和自动验证能力。
+- 通过 per-user 请求限流和可配置工作流超时处理，提升内部试点场景下的运行韧性。
 
-## Interview Narrative
+## 面试讲述路径
 
-Start with the business scenario: a cloud platform wants an internal assistant
-that can answer product, billing, order, instance, and cost-optimization
-questions by combining LLM reasoning with business tools and knowledge
-retrieval.
+先讲业务场景：云平台希望有一个内部智能客服/运维助手，能回答产品、账单、订单、实例、资源降本等问题，并且不是单纯靠模型瞎编，而是结合业务工具和知识库返回答案。
 
-Then explain the request path:
+然后讲请求链路：
 
 ```text
-Vue or API client -> FastAPI /api/chat -> demo auth boundary -> rate limiter
--> security guard -> semantic cache -> memory context -> LangGraph workflow
--> specialist agent/tool/RAG -> SSE response -> metrics and structured logs
+Vue 前端或 API 客户端 -> FastAPI /api/chat -> demo 鉴权边界 -> 请求限流
+-> 输入安全检查 -> 语义缓存 -> 记忆上下文 -> LangGraph 工作流
+-> 专家 Agent / 工具 / RAG / GraphRAG -> SSE 流式响应
+-> 指标和结构化日志
 ```
 
-The key engineering point is that the project is not only a prompt demo. It has
-request identity, traceability, tests, evals, safe error payloads, deployment
-scaffolding, and documented production gaps.
+核心工程点：这个项目不是单纯 Prompt Demo，而是有请求身份、可追踪日志、测试、eval、稳定错误、部署骨架和明确生产边界的企业级改造型 AI Agent 项目。
 
-## Do Not Claim Yet
+## 暂时不要这样说
 
-- Do not claim real JWT/OAuth or SSO. Current auth is demo-token based.
-- Do not claim full multi-tenant production isolation.
-- Do not claim hosted LangFuse or OpenTelemetry tracing.
-- Do not claim Postgres checkpoint persistence. Current persistence is SQLite
-  checkpoint based.
-- Do not claim distributed metrics or monitoring. Current metrics are
-  in-process metrics.
-- Do not claim distributed rate limiting. Current protection is in-process rate
-  limiting.
-- Do not claim internet-facing SaaS production readiness, TLS, ingress,
-  autoscaling, or secret-management maturity.
-- Do not claim that rule-based prompt-injection checks are comprehensive
-  guardrails.
+- 不要说已经实现真实 JWT/OAuth 或 SSO。当前是 demo-token based。
+- 不要说已经实现完整多租户生产隔离。
+- 不要说已经接入 LangFuse or OpenTelemetry 托管 tracing。
+- 不要说 checkpoint 已经是 Postgres。当前是 SQLite checkpoint。
+- 不要说已经有分布式指标和监控。当前是 in-process metrics。
+- 不要说已经有分布式限流。当前是 in-process rate limiting。
+- 不要说已经公网生产就绪，具备 TLS、Ingress、自动扩缩容和成熟密钥管理。
+- 不要说规则版 Prompt Injection 检查已经覆盖所有攻击。
 
-## Current Level
+## 当前水平
 
-The project is strongest as a small-company internal pilot or resume-grade
-enterprise AI assistant MVP. A fair score is around 7/10 for a personal
-engineering project, while still below large-enterprise production standards.
+这个项目最适合作为“小公司内部试点级 AI 助手 MVP”或“简历主项目”。按个人工程项目标准，可以放在 7/10 左右；但距离大企业生产平台仍然有明显差距。
 
-## Next Practical Step
+## 下一步建议
 
-Freeze this enterprise copy as the resume baseline. Use the original learning
-copy to keep studying the architecture slowly, especially LangGraph state flow,
-RAG data ingestion, FastAPI routing, and frontend streaming.
+把企业副本冻结为简历基线。原学习副本继续慢慢消化架构，重点学习 LangGraph 状态流、RAG 数据导入、FastAPI 路由和前端流式响应。

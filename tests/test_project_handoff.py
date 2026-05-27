@@ -12,12 +12,12 @@ def test_project_handoff_document_separates_claims_from_limits():
     content = read_text("docs/project_handoff.md")
 
     required_sections = [
-        "## Positioning",
-        "## Confirmed Implemented Behavior",
-        "## Resume-Safe Bullets",
-        "## Interview Narrative",
-        "## Do Not Claim Yet",
-        "## Next Practical Step",
+        "## 项目定位",
+        "## 已确认实现的能力",
+        "## 简历安全写法",
+        "## 面试讲述路径",
+        "## 暂时不要这样说",
+        "## 下一步建议",
     ]
 
     for section in required_sections:
@@ -28,8 +28,8 @@ def test_project_handoff_contains_enterprise_boundaries():
     content = read_text("docs/project_handoff.md")
 
     required_phrases = [
-        "internal pilot",
-        "not a public SaaS production platform",
+        "内部 AI 助手试点",
+        "不是公网 SaaS 生产平台",
         "demo-token based",
         "SQLite checkpoint",
         "in-process metrics",

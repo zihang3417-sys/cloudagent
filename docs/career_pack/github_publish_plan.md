@@ -1,66 +1,61 @@
-# GitHub Publish Plan
+# CloudAgent GitHub 发布方案
 
-## Current Situation
+## 当前情况
 
-Original repository:
+原始仓库：
 
 ```text
 https://github.com/zihang3417-sys/cloudagent
 ```
 
-Local enterprise copy:
+企业级副本：
 
 ```text
 F:\agent0520\cloudagent_enterprise
 ```
 
-The enterprise copy currently points to the same remote:
+企业级副本当前 remote 指向同一个 GitHub 仓库：
 
 ```text
 origin https://github.com/zihang3417-sys/cloudagent.git
 ```
 
-## Recommended Strategy
+## 推荐方案
 
-Use the original GitHub repository as the public-facing project, but preserve
-the old learning prototype as a branch or tag.
+建议保留原来的 GitHub 仓库地址，把它升级成公开展示用的企业级版本，同时把原来的学习原型保留成分支。
 
-Recommended layout:
+推荐结构：
 
 ```text
-main                 -> enterprise/refactored version
-learning-prototype   -> original learning version
-enterprise-baseline  -> optional tag after final verification
+main                 -> 企业级改造后的 CloudAgent
+learning-prototype   -> 原始学习/玩具原型版本
+enterprise-mvp-v1    -> 最终简历版 tag
 ```
 
-Why this is recommended:
+这样做的好处：
 
-- Your resume can keep one clean GitHub URL.
-- Recruiters see the strongest version first.
-- The original project is not deleted; it becomes the learning/prototype branch.
-- The commit history tells a credible story: toy prototype -> enterprise MVP.
+- 简历上只放一个 GitHub 地址，干净、集中。
+- 面试官打开默认 `main` 就能看到最强版本。
+- 原来的学习项目不会丢，只是换到 `learning-prototype` 分支。
+- 项目演进路线很自然：学习 Demo -> 企业级 AI Agent MVP。
 
-## Safer Alternative
+## 备选方案
 
-Create a new repository:
+也可以新建一个仓库：
 
 ```text
 cloudagent-enterprise
 ```
 
-Use this if you want to avoid overwriting the old repository's `main` branch.
+适合你完全不想动原仓库 `main` 的情况。
 
-Tradeoff:
+缺点是简历上可能要解释两个仓库，注意力会分散。除非你特别想保留原仓库主页，否则我更推荐使用同一个仓库。
 
-- Cleaner separation.
-- But the resume has two project URLs, which is less focused.
+## 推荐推送流程
 
-## Suggested Push Flow
+执行前一定先确认两个目录的 Git 状态，不要把 `.env`、`.venv`、`node_modules`、`data`、SQLite 文件或 API Key 推上去。
 
-Do this only after verifying both folders are clean and the old repository is
-backed up.
-
-### 1. In original project, create backup branch
+### 1. 在原项目里保存学习版分支
 
 ```powershell
 cd F:\agent0520\cloudagent
@@ -69,7 +64,9 @@ git branch learning-prototype
 git push origin learning-prototype
 ```
 
-### 2. In enterprise project, confirm final verification
+然后去 GitHub 网页确认 `learning-prototype` 分支确实存在。
+
+### 2. 在企业副本里做最终验证
 
 ```powershell
 cd F:\agent0520\cloudagent_enterprise
@@ -79,7 +76,7 @@ cd F:\agent0520\cloudagent_enterprise
 docker compose -f infra\docker-compose.yml -f infra\docker-compose.enterprise.yml config --quiet
 ```
 
-### 3. Push enterprise copy to main
+### 3. 推送企业版到 main
 
 ```powershell
 cd F:\agent0520\cloudagent_enterprise
@@ -87,48 +84,50 @@ git status
 git push origin main
 ```
 
-If Git refuses because remote history differs, stop and inspect first. Do not
-force-push until the backup branch has been verified on GitHub.
+如果 Git 提示远端历史不一致，先停下来检查，不要立刻 force push。只有确认 `learning-prototype` 已经备份成功后，才考虑是否强推。
 
-### 4. Optional tag
+### 4. 可选：打一个简历版本 tag
 
 ```powershell
 git tag enterprise-mvp-v1
 git push origin enterprise-mvp-v1
 ```
 
-## README Front Page Recommendation
+这样你以后可以明确告诉面试官：简历使用的是 `enterprise-mvp-v1` 版本。
 
-The public README should start with:
+## README 首页建议
+
+README 开头建议直接写中文：
 
 ```text
-CloudAgent Enterprise is a cloud-platform AI assistant MVP for internal pilot
-scenarios. It combines FastAPI, Vue3, LangGraph multi-agent orchestration,
-MCP-style business tools, RAG/GraphRAG, memory, semantic cache, observability,
-security guardrails, and deployment-readiness scaffolding.
+CloudAgent Enterprise 是一个面向云平台客服/运维场景的企业级 AI 助手 MVP。项目基于 FastAPI + Vue3 + LangGraph 构建，融合 Multi-Agent 编排、MCP-style 业务工具、RAG/GraphRAG、记忆系统、语义缓存、可观测性、安全边界、CI/Eval 与部署就绪骨架，适合作为小公司内部 AI 助手试点或简历项目展示。
 ```
 
-Then show:
+README 推荐顺序：
 
-1. What it does.
-2. Architecture diagram.
-3. Quick start.
-4. Demo questions.
-5. Enterprise trust features.
-6. Current limits.
+1. 项目能做什么。
+2. 架构图。
+3. 快速启动。
+4. 推荐演示问题。
+5. 企业级改造点。
+6. 当前边界。
+7. 简历/面试如何表述。
 
-## What Not To Publish
+## 不要发布的内容
 
-Do not publish:
+不要发布：
 
 - `.env`
 - `.env.container`
 - `.venv/`
 - `node_modules/`
 - `data/`
-- SQLite checkpoint files
-- API keys
-- local IDE config
+- SQLite checkpoint 文件
+- API Key
+- 本地 IDE 配置
 
-The current `.gitignore` and `.dockerignore` already cover these categories,
-but check `git status --short` before pushing.
+当前 `.gitignore` 和 `.dockerignore` 已经覆盖这些类别，但每次 push 前仍然要看：
+
+```powershell
+git status --short
+```
