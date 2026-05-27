@@ -93,6 +93,14 @@
 - The CI pipeline now checks that the backend compose override can merge with the data-service compose stack.
 - Added pytest coverage to prevent the release-gate command from being removed silently.
 
+### Phase 13: Career Handoff
+
+- Added `docs/project_handoff.md` as a resume and interview handoff document.
+- Documented the safe project positioning as a small-company internal pilot or enterprise AI assistant MVP.
+- Separated confirmed implemented behavior from items that should not be claimed yet.
+- Added resume-safe bullet points, an interview request path, and current production-readiness boundaries.
+- Added pytest coverage to keep the handoff document and boundary language present.
+
 ## Verification Commands
 
 ```powershell
